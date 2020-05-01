@@ -34,7 +34,13 @@ Wolpertinger takes as input HTTP POST requests carrying the following JSON:
 
 ### Output
 
-Wolpertinger responds with the following JSON structure:
+Wolpertinger responds with either an empty JSON structure (if there are no
+bridges to test), or with a structure that contains one or more bridges.  An
+empty JSON response has the following format:
+
+      {}
+
+A JSON response with one or more bridges has the following format:
 
       {
         "BRIDGE_ID": {
