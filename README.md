@@ -11,10 +11,14 @@ clients like OONI to retrieve Tor bridges to probe.
 Wolpertinger takes as input HTTP POST requests carrying the following JSON:
 
       {
+        "id": "ID",
         "type": "TYPE",
         "country_code": "COUNTRY_CODE",
         "auth_token": "AUTH_TOKEN"
       }
+
+* `ID` is a string that uniquely identifies the client.  If the requesting
+  client has no unique ID, use an empty string instead.
 
 * `TYPE` is a string that identifies the type of client that's asking for
   bridges to probe (e.g., "ooni").  Please talk to us if
