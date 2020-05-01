@@ -11,8 +11,10 @@ import (
 var config ConfigFile
 
 type ConfigFile struct {
-	MasterKey string     `json:"master_key"`
-	ApiTokens []ApiToken `json:"api_tokens"`
+	MasterKey     string     `json:"master_key"`
+	ApiTokens     []ApiToken `json:"api_tokens"`
+	SqliteFile    string     `json:"sqlite_file"`
+	ExtrainfoFile string     `json:"extrainfo_file"`
 }
 
 type ApiToken struct {
@@ -54,6 +56,13 @@ func main() {
 			log.Fatalf("Failed to load config file: %s", err)
 		}
 	}
+
+	// (Re-)load bridges periodically.  We wait for this function to finish its
+	// first run before proceeding to start our web service.
+	done := make(chan bool)
+	defer close(done)
+	go bridges.ReloadBridges(done)
+	<-done
 
 	mux := http.NewServeMux()
 	mux.Handle("/api/fetch", http.HandlerFunc(ProbeHandler))

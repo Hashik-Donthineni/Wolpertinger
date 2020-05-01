@@ -21,11 +21,12 @@ type ClientRequest struct {
 
 // ServerResponse is the response to a ClientRequest.  It maps a bridge's ID to
 // a Bridge struct.
-type ServerResponse map[string]Bridge
+type ServerResponse map[string]*Bridge
 
+// isRequestAuthenticated returns 'true' if we have the authentication token in
+// the client request on record.
 func isRequestAuthenticated(req *ClientRequest) bool {
 	for _, t := range config.ApiTokens {
-		log.Printf("comparing %s to %s\n", req.AuthToken, t.Token)
 		if req.AuthToken == t.Token {
 			return true
 		}
@@ -59,7 +60,7 @@ func ProbeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := ServerResponse{}
-	for _, bridge := range bridges {
+	for _, bridge := range bridges.Bridges {
 		resp[bridge.GetID()] = bridge
 	}
 
