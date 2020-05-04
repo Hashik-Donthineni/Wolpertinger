@@ -8,7 +8,6 @@ import (
 	"net"
 	"os"
 	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -116,52 +115,6 @@ func (b *Bridge) AddTransport(t1 *Transport) {
 func (b *Bridge) GetID() string {
 
 	threeTuple := fmt.Sprintf("%s-%d-%s", b.Address.String(), b.Port, ProtoTypeTCP)
-	return Hmac([]byte(threeTuple))
-}
-
-// Transport represents a Tor bridge's pluggable transport.
-type Transport struct {
-	Type        string            `json:"type"`
-	Protocol    string            `json:"protocol"`
-	Address     IPAddr            `json:"address"`
-	Port        uint16            `json:"port"`
-	Fingerprint string            `json:"fingerprint"`
-	Arguments   map[string]string `json:"arguments,omitempty"`
-	Bridge      *Bridge           `json:"-"`
-}
-
-// Equals returns 'true' if the two given transports are identical, i.e., the
-// values in their respective structs are identical.
-func (t1 *Transport) Equals(t2 *Transport) bool {
-	return reflect.DeepEqual(t1, t2)
-}
-
-// NewTransport allocates and returns a new Transport object.
-func NewTransport() *Transport {
-	t := &Transport{}
-	t.Arguments = make(map[string]string)
-	return t
-}
-
-// String returns a string representation of the transport.
-func (t *Transport) String() string {
-
-	var args []string
-	for key, value := range t.Arguments {
-		args = append(args, fmt.Sprintf("%s=%s", key, value))
-	}
-
-	return fmt.Sprintf("%s %s:%d %s %s",
-		t.Type, t.Address.String(), t.Port, t.Fingerprint, strings.Join(args, ","))
-}
-
-// GetID returns a unique ID that we derive from a transport's three-tuple
-// (i.e., its IP address, port, and protocol).  We derive the unique ID by
-// doing a HMAC (keyed with a master secret from our config file) over the
-// bridge's three-tuple.
-func (t *Transport) GetID() string {
-
-	threeTuple := fmt.Sprintf("%s-%d-%s", t.Address.String(), t.Port, t.Protocol)
 	return Hmac([]byte(threeTuple))
 }
 
