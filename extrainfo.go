@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"net"
-	"os"
+	//"os"
 	"strconv"
 	"strings"
 )
@@ -63,21 +64,15 @@ func populateTransportInfo(transport string, t *Transport) error {
 	return nil
 }
 
-// ParseExtrainfoFile parses the given extra-info document and returns the
+// ParseExtrainfoDoc parses the given extra-info document and returns the
 // content as a Bridges object.  Note that the extra-info document format is as
 // it's produced by the bridge authority.
-func ParseExtrainfoFile(filename string) (*Bridges, error) {
+func ParseExtrainfoDoc(r io.Reader) (*Bridges, error) {
 
 	var bridges = NewBridges()
 	var b *Bridge
 
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
 		line = strings.TrimSpace(line)
@@ -95,6 +90,7 @@ func ParseExtrainfoFile(filename string) (*Bridges, error) {
 		// several.
 		if strings.HasPrefix(line, TransportPrefix) {
 			t := NewTransport()
+			t.Fingerprint = b.Fingerprint
 			err := populateTransportInfo(line, t)
 			if err != nil {
 				return nil, err

@@ -1,14 +1,18 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -87,6 +91,8 @@ func (b *Bridge) String() string {
 // NewBridge allocates and returns a new Bridge object.
 func NewBridge() *Bridge {
 	b := &Bridge{}
+	// A bridge (without pluggable transports) is always running vanilla Tor
+	// over TCP.
 	b.Protocol = ProtoTypeTCP
 	b.Type = BridgeTypeVanilla
 	return b
@@ -167,13 +173,23 @@ func (bs *Bridges) ReloadBridges(done chan bool) {
 	sentDone := false
 	for ; true; <-ticker.C {
 		log.Println("Loading bridges from sqlite database.")
-		sql, err := LoadDatabase(config.SqliteFile)
+		db, err := sql.Open("sqlite3", config.SqliteFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer db.Close()
+		sql, err := LoadDatabase(db)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		log.Println("Loading bridges from cached-extrainfo document.")
-		extra, err := ParseExtrainfoFile(config.ExtrainfoFile)
+		file, err := os.Open(config.ExtrainfoFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		extra, err := ParseExtrainfoDoc(file)
 		if err != nil {
 			log.Fatal(err)
 		}

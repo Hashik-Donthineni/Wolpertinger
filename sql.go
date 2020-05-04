@@ -13,13 +13,7 @@ const (
 	LastSeenLayout = "2006-01-02 15:04"
 )
 
-func LoadDatabase(filename string) (*Bridges, error) {
-
-	db, err := sql.Open("sqlite3", filename)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
+func LoadDatabase(db *sql.DB) (*Bridges, error) {
 
 	// Figure out the latest 'last_seen' value, which allows us to select only
 	// bridges that are currently online.
