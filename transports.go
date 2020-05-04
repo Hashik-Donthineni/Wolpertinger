@@ -15,6 +15,7 @@ type Transport struct {
 	Fingerprint string            `json:"fingerprint"`
 	Arguments   map[string]string `json:"arguments,omitempty"`
 	Bridge      *Bridge           `json:"-"`
+	BlockedIn   []*Location       `json:"-"`
 }
 
 // NewTransport allocates and returns a new Transport object.

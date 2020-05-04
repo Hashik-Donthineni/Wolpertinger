@@ -68,6 +68,13 @@ func NewBridges() *Bridges {
 	return b
 }
 
+// Location represents a location in which a bridge is blocked.  This is either
+// a two-letter country code or an AS number.
+type Location struct {
+	Country string // An ISO 3166-1 alpha-2 country code.
+	ASN     int    // An autonomous system number.
+}
+
 // Bridge represents a Tor bridge.
 type Bridge struct {
 	Type        string       `json:"type"`
@@ -78,6 +85,7 @@ type Bridge struct {
 	Distributor string       `json:"-"`
 	FirstSeen   time.Time    `json:"-"`
 	LastSeen    time.Time    `json:"-"`
+	BlockedIn   []*Location  `json:"-"`
 	Transports  []*Transport `json:"-"`
 }
 
