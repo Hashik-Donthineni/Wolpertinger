@@ -1,5 +1,10 @@
 # Wolpertinger
 
+Wolpertinger hands out bridges to censorship measurement platforms (e.g., OONI)
+for testing.  The test result is then fed back into BridgeDB, allowing BridgeDB
+to be smarter about who gets what bridge.  For example, if a user from Turkey
+requests a bridge, BridgeDB won't return a bridge that it knows is blocked in
+Turkey.
 
 ## JSON API
 
