@@ -1,11 +1,18 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+)
+
+const (
+	AuthTokenSize = 32
 )
 
 var config ConfigFile
@@ -37,17 +44,39 @@ func loadConfigFile(filename string) error {
 	return nil
 }
 
+// genNewToken generates and returns a new authentication token.
+func genNewToken() (string, error) {
+
+	buf := make([]byte, AuthTokenSize)
+	_, err := rand.Read(buf)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(buf), nil
+}
+
 func main() {
 
 	var addr string
 	var certFilename, keyFilename string
 	var configFilename string
+	var newToken bool
 
 	flag.StringVar(&addr, "addr", ":7000", "Address to listen on.")
 	flag.StringVar(&certFilename, "cert", "", "TLS certificate file.")
 	flag.StringVar(&keyFilename, "key", "", "TLS private key file.")
 	flag.StringVar(&configFilename, "config", "", "Configuration file.")
+	flag.BoolVar(&newToken, "new-token", false, "Generate a new authentication token.")
 	flag.Parse()
+
+	if newToken {
+		token, err := genNewToken()
+		if err != nil {
+			log.Fatalf("Failed to generate new authentication token: %s")
+		}
+		fmt.Printf("Authentication token: %s\n", token)
+		return
+	}
 
 	if configFilename == "" {
 		log.Fatal("No configuration file given.")
