@@ -109,6 +109,33 @@ Here is an example of a JSON response, consisting of two bridges:
         }
       }
 
+## Configuration
+
+You must point wolpertinger to its configuration file using the `-config`
+command line switch.  This JSON-formatted configuration file has the following
+fields:
+
+    {
+      "master_key": "RfA7T5O0AY5l+5shuUXWJpPQCa1JJcUqKmls/jNP3+U=",
+      "api_tokens":
+      [
+          {"organisation": "foo",
+           "token": "rqIl5Js2vGyF4n6ba3UpOrdLkd5lSs/ogv80dprCFHI="},
+          {"organisation": "bar",
+           "token": "FuoP6JeXetoEmwD2jB0Nc3ip2MlEdD/ESa30ML0NaZE="}
+      ],
+      "sqlite_file": "/path/to/bridges.sqlite",
+      "extrainfo_file": "/path/to/cached-extrainfo"
+    }
+
+Replace the value of `master_key` and `token` with your own master key and
+authentication tokens, respectively.  These values are Base64-encoded 32-byte
+secrets from a CSPRNG.  You can create both a master key and a new
+authentication token by running wolpertinger with the `-new-token` switch.
+
+Each `organisation` represents an organisation that you allow to interact with
+wolpertinger's API.  Add as many as you need.
+
 ## Contact
 
 Send email to Philipp Winter <phw@torproject.org>.
