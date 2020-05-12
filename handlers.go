@@ -41,8 +41,8 @@ func ProbeHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		log.Printf("Received invalid JSON.")
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("Received invalid JSON request.")
+		http.Error(w, "invalid json request", http.StatusBadRequest)
 		return
 	}
 
