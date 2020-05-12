@@ -133,7 +133,6 @@ func (bs *Bridges) ReloadBridges(done chan bool) {
 
 	sentDone := false
 	for ; true; <-ticker.C {
-		log.Println("Loading bridges from sqlite database.")
 		db, err := sql.Open("sqlite3", config.SqliteFile)
 		if err != nil {
 			log.Fatal(err)
@@ -144,7 +143,6 @@ func (bs *Bridges) ReloadBridges(done chan bool) {
 			log.Fatal(err)
 		}
 
-		log.Println("Loading bridges from cached-extrainfo document.")
 		file, err := os.Open(config.ExtrainfoFile)
 		if err != nil {
 			log.Fatal(err)
@@ -155,7 +153,6 @@ func (bs *Bridges) ReloadBridges(done chan bool) {
 			log.Fatal(err)
 		}
 
-		log.Println("Merging transports from cached-extrainfo with sqlite bridges.")
 		for f, b1 := range sql.Bridges {
 			// Do we have any transports for this bridge?
 			if b2, ok := extra.Bridges[f]; ok {
