@@ -94,7 +94,7 @@ func main() {
 	<-done
 
 	mux := http.NewServeMux()
-	mux.Handle("/api/fetch", http.HandlerFunc(ProbeHandler))
+	mux.Handle("/fetch", http.HandlerFunc(ProbeHandler))
 
 	log.Printf("Starting service on %s.", addr)
 	if certFilename != "" && keyFilename != "" {
