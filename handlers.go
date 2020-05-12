@@ -69,5 +69,5 @@ func ProbeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error marshalling JSON: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	fmt.Fprintf(w, string(json))
+	fmt.Fprintln(w, string(json))
 }
