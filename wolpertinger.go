@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 const (
@@ -60,14 +61,25 @@ func main() {
 	var addr string
 	var certFilename, keyFilename string
 	var configFilename string
+	var logFilename string
 	var newToken bool
 
 	flag.StringVar(&addr, "addr", ":7000", "Address to listen on.")
 	flag.StringVar(&certFilename, "cert", "", "TLS certificate file.")
 	flag.StringVar(&keyFilename, "key", "", "TLS private key file.")
 	flag.StringVar(&configFilename, "config", "", "Configuration file.")
+	flag.StringVar(&logFilename, "log", "", "Log file.")
 	flag.BoolVar(&newToken, "new-token", false, "Generate a new authentication token.")
 	flag.Parse()
+
+	if logFilename != "" {
+		f, err := os.OpenFile(logFilename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+		if err != nil {
+			log.Fatalf("Error opening file %v", err)
+		}
+		defer f.Close()
+		log.SetOutput(f)
+	}
 
 	if newToken {
 		token, err := genNewToken()
