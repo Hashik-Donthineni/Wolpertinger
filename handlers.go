@@ -11,12 +11,13 @@ const (
 	ProbeTypeOONI = "ooni"
 )
 
-// ClientResponse represents a request to probe a bridge, e.g., an OONI probe
+// ClientRequest represents a request to probe a bridge, e.g., an OONI probe
 // asking to get a bridge to test.
 type ClientRequest struct {
-	ProbeType string
-	Location  string
-	AuthToken string
+	Id        string `json:"id"`
+	ProbeType string `json:"type"`
+	Location  string `json:"country_code"`
+	AuthToken string `json:"auth_token"`
 }
 
 // ServerResponse is the response to a ClientRequest.  It maps a bridge's ID to
