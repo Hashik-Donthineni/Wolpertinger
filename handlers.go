@@ -34,6 +34,14 @@ func isRequestAuthenticated(req *ClientRequest) bool {
 	return false
 }
 
+// IndexHandler handles requests for the service's index page.  We respond with
+// a static string to make it easy for monitoring tools to check if
+// wolpertinger is still alive and well.
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Fprintln(w, "Beware the Wolpertinger.")
+}
+
 // ProbeHandler deals with clients (e.g., an OONI probe) requesting a bridge to
 // probe.
 func ProbeHandler(w http.ResponseWriter, r *http.Request) {
