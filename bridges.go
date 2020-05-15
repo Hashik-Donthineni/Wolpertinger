@@ -135,22 +135,26 @@ func (bs *Bridges) ReloadBridges(done chan bool) {
 	for ; true; <-ticker.C {
 		db, err := sql.Open("sqlite3", config.SqliteFile)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Failed to open SQLite database: %s", err)
+			continue
 		}
 		defer db.Close()
 		sql, err := LoadDatabase(db)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Failed to read bridges from SQLite database: %s", err)
+			continue
 		}
 
 		file, err := os.Open(config.ExtrainfoFile)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Failed to open extrainfo file: %s", err)
+			continue
 		}
 		defer file.Close()
 		extra, err := ParseExtrainfoDoc(file)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Failed to read bridges from extrainfo file: %s", err)
+			continue
 		}
 
 		for f, b1 := range sql.Bridges {
