@@ -30,7 +30,7 @@ func LoadDatabase(db *sql.DB) (*Bridges, error) {
 	}
 
 	// Now select the actual bridges.
-	query := fmt.Sprintf("SELECT * FROM Bridges WHERE last_seen = '%s';", latest)
+	query := fmt.Sprintf("SELECT * FROM Bridges WHERE last_seen = '%s' AND or_port IS NOT NULL;", latest)
 	rows, err = db.Query(query)
 	if err != nil {
 		return nil, err
