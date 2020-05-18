@@ -106,7 +106,7 @@ func main() {
 	<-done
 
 	mux := http.NewServeMux()
-	mux.Handle("/fetch", http.HandlerFunc(ProbeHandler))
+	mux.Handle("/bridges", http.HandlerFunc(BridgesHandler))
 	mux.Handle("/", http.HandlerFunc(IndexHandler))
 
 	log.Printf("Starting service on %s.", addr)

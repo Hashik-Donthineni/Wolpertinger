@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -43,25 +44,60 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Beware the Wolpertinger.")
 }
 
-// ProbeHandler deals with clients (e.g., an OONI probe) requesting a bridge to
-// probe.
-func ProbeHandler(w http.ResponseWriter, r *http.Request) {
-	var req ClientRequest
+// extractClientRequest attempts to extract a ClientRequest object from the
+// given HTTP request.
+func extractClientRequest(r *http.Request) (*ClientRequest, error) {
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+	if err := r.ParseForm(); err != nil {
+		return nil, err
+	}
+
+	id, ok := r.Form["id"]
+	if !ok {
+		return nil, errors.New("key 'id' not found in request")
+	}
+
+	reqType, ok := r.Form["type"]
+	if !ok {
+		return nil, errors.New("key 'type' not found in request")
+	} else if len(reqType) != 1 {
+		return nil, errors.New("need exactly one 'type' key")
+	}
+
+	countryCode, ok := r.Form["country_code"]
+	if !ok {
+		return nil, errors.New("key 'country_code' not found in request")
+	} else if len(countryCode) != 1 {
+		return nil, errors.New("need exactly one 'country_code' key")
+	}
+
+	authToken, ok := r.Form["auth_token"]
+	if !ok {
+		return nil, errors.New("key 'auth_token' not found in request")
+	} else if len(authToken) != 1 {
+		return nil, errors.New("need exactly one 'auth_token' key")
+	}
+
+	return &ClientRequest{id[0], reqType[0], countryCode[0], authToken[0]}, nil
+}
+
+// BridgesHandler deals with clients (e.g., an OONI probe) requesting a bridge
+// to probe.
+func BridgesHandler(w http.ResponseWriter, r *http.Request) {
+
+	req, err := extractClientRequest(r)
 	if err != nil {
-		log.Printf("Received invalid JSON request.")
-		http.Error(w, "invalid json request", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if !isRequestAuthenticated(&req) {
-		log.Printf("Received unauthenticated request.")
+	if !isRequestAuthenticated(req) {
+		log.Printf("Received request with invalid authentication token.")
 		http.Error(w, "invalid authentication token", http.StatusUnauthorized)
 		return
 	}
 
-	bridges, err := GetBridges(&req)
+	bridges, err := GetBridges(req)
 	if err != nil {
 		log.Printf("Error getting bridges: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
