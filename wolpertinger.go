@@ -84,7 +84,7 @@ func main() {
 	if newToken {
 		token, err := genNewToken()
 		if err != nil {
-			log.Fatalf("Failed to generate new authentication token: %s")
+			log.Fatalf("Failed to generate new authentication token: %s", err.Error())
 		}
 		fmt.Printf("Authentication token: %s\n", token)
 		return
