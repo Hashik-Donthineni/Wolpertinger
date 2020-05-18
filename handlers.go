@@ -78,5 +78,6 @@ func ProbeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error marshalling JSON: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprintln(w, string(json))
 }
