@@ -31,12 +31,12 @@ func TestPopulateTransportInfo(t *testing.T) {
 	if err = populateTransportInfo("transport bar 1.2.3.4:1234 a=b,foo=bar", transport); err != nil {
 		t.Errorf("Failed to parse transport line.")
 	}
-	value, _ := transport.Arguments["a"]
-	if value != "b" {
+	value, _ := transport.Parameters["a"]
+	if value[0] != "b" {
 		t.Errorf("Failed to parse transport arguments.")
 	}
-	value, _ = transport.Arguments["foo"]
-	if value != "bar" {
+	value, _ = transport.Parameters["foo"]
+	if value[0] != "bar" {
 		t.Errorf("Failed to parse transport arguments.")
 	}
 }
@@ -77,12 +77,12 @@ transport obfs5 1.2.3.4:4321 foo=bar
 	if bridge.Transports[0].Fingerprint != "51502DF3D176CC10C52CC65694205BBA185E0982" {
 		t.Errorf("Couldn't parse obfs4 fingerprint.")
 	}
-	value, _ := bridge.Transports[0].Arguments["key"]
-	if value != "value" {
+	value, _ := bridge.Transports[0].Parameters["key"]
+	if value[0] != "value" {
 		t.Errorf("Couldn't parse first obfs4 key=value pair.")
 	}
-	value, _ = bridge.Transports[0].Arguments["1"]
-	if value != "2" {
+	value, _ = bridge.Transports[0].Parameters["1"]
+	if value[0] != "2" {
 		t.Errorf("Couldn't parse second obfs4 key=value pair.")
 	}
 }

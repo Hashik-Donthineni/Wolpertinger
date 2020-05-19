@@ -57,7 +57,7 @@ func populateTransportInfo(transport string, t *Transport) error {
 			if len(kv) != 2 {
 				return fmt.Errorf("key:value pair in %q not separated by a '='", words[3])
 			}
-			t.Arguments[kv[0]] = kv[1]
+			t.Parameters[kv[0]] = []string{kv[1]}
 		}
 	}
 

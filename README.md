@@ -62,8 +62,8 @@ A JSON response with one or more bridges has the following format:
           "address": "ADDRESS",
           "port": PORT,
           "protocol": "PROTOCOL",
-          "arguments": {
-              "KEY": "VALUE",
+          "params": {
+              "KEY": ["VALUE"],
               ...
           },
         },
@@ -89,19 +89,19 @@ A JSON response with one or more bridges has the following format:
   "udp").
 
 * The strings `KEY` and `VALUE` constitute a dictionary that – for obfuscated
-  bridges – contains a bridge's arguments (e.g., "cert":
+  bridges – contains a bridge's parameters (e.g., "cert":
   "VBYOXYf+SbRu2dCHJkLuL9y7YX4IWhucHGg3ES+l/KKxe3KL+zhCHr5hRqgSE6w80bZvCA").
   Unobfuscated bridges (i.e., bridges whose type is "vanilla") don't have the
-  "arguments" key.
+  "params" key.
 
 Here is an example of a JSON response, consisting of two bridges:
 
       {
         "b8ac3f413663f3ed3a404a5db8b1445c8c1b37f85849879feb3b1b03ce8cb6d8": {
           "address": "2001:4860:4860::8888",
-          "arguments": {
-            "cert": "VBYOXYf+SbRu2dCHJkLuL9y7YX4IWhucHGg3ES+l/KKxe3KL+zhCHr5hRqgSE6w80bZvCA",
-            "iat-mode": "0"
+          "params": {
+            "cert": ["VBYOXYf+SbRu2dCHJkLuL9y7YX4IWhucHGg3ES+l/KKxe3KL+zhCHr5hRqgSE6w80bZvCA"],
+            "iat-mode": ["0"]
           },
           "fingerprint": "1234567890ABCDEF1234567890ABCDEF12345678",
           "port": 80,

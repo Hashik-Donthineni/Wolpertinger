@@ -8,20 +8,20 @@ import (
 
 // Transport represents a Tor bridge's pluggable transport.
 type Transport struct {
-	Type        string            `json:"type"`
-	Protocol    string            `json:"protocol"`
-	Address     IPAddr            `json:"address"`
-	Port        uint16            `json:"port"`
-	Fingerprint string            `json:"fingerprint"`
-	Arguments   map[string]string `json:"arguments,omitempty"`
-	Bridge      *Bridge           `json:"-"`
-	BlockedIn   []*Location       `json:"-"`
+	Type        string              `json:"type"`
+	Protocol    string              `json:"protocol"`
+	Address     IPAddr              `json:"address"`
+	Port        uint16              `json:"port"`
+	Fingerprint string              `json:"fingerprint"`
+	Parameters  map[string][]string `json:"params,omitempty"`
+	Bridge      *Bridge             `json:"-"`
+	BlockedIn   []*Location         `json:"-"`
 }
 
 // NewTransport allocates and returns a new Transport object.
 func NewTransport() *Transport {
 	t := &Transport{}
-	t.Arguments = make(map[string]string)
+	t.Parameters = make(map[string][]string)
 	return t
 }
 
@@ -29,8 +29,8 @@ func NewTransport() *Transport {
 func (t *Transport) String() string {
 
 	var args []string
-	for key, value := range t.Arguments {
-		args = append(args, fmt.Sprintf("%s=%s", key, value))
+	for key, values := range t.Parameters {
+		args = append(args, fmt.Sprintf("%s=%s", key, values[0]))
 	}
 
 	return fmt.Sprintf("%s %s:%d %s %s",
