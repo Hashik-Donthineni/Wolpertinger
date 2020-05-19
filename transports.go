@@ -21,6 +21,9 @@ type Transport struct {
 // NewTransport allocates and returns a new Transport object.
 func NewTransport() *Transport {
 	t := &Transport{}
+	// As of 2020-05-19, all of our pluggable transports are based on TCP, so
+	// we might as well make it the default for now.
+	t.Protocol = ProtoTypeTCP
 	t.Parameters = make(map[string][]string)
 	return t
 }

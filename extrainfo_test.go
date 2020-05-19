@@ -85,4 +85,7 @@ transport obfs5 1.2.3.4:4321 foo=bar
 	if value[0] != "2" {
 		t.Errorf("Couldn't parse second obfs4 key=value pair.")
 	}
+	if bridge.Protocol != ProtoTypeTCP {
+		t.Errorf("Transport's protocol isn't TCP.")
+	}
 }
