@@ -36,13 +36,27 @@ func TestExtractClientRequest(t *testing.T) {
 		"bogus extrainfo file",
 	}
 
-	req, _ = http.NewRequest("GET", fmt.Sprintf("%s?id=1234&type=foo&country_code=ru&auth_token=%s", baseUrl, apiToken), nil)
-	_, err = extractClientRequest(req)
+	req, _ = http.NewRequest("GET", fmt.Sprintf("%s?id=1234&type=foo&country_code=ru", baseUrl), nil)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiToken))
+	ret, err := extractClientRequest(req)
 	if err != nil {
 		t.Errorf("failed to accept valid arguments: %s", err.Error())
 	}
+	if ret.Id != "1234" {
+		t.Errorf("failed to parse client ID")
+	}
+	if ret.ProbeType != "foo" {
+		t.Errorf("failed to parse probe type")
+	}
+	if ret.Location != "ru" {
+		t.Errorf("failed to parse country code")
+	}
+	if ret.AuthToken != apiToken {
+		t.Errorf("failed to parse bearer token")
+	}
 
-	req, _ = http.NewRequest("GET", fmt.Sprintf("%s?id=&type=foo&country_code=ru&auth_token=%s", baseUrl, apiToken), nil)
+	req, _ = http.NewRequest("GET", fmt.Sprintf("%s?id=&type=foo&country_code=ru", baseUrl), nil)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiToken))
 	_, err = extractClientRequest(req)
 	if err != nil {
 		t.Errorf("failed to accept empty id argument: %s", err.Error())

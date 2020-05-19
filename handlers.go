@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -48,6 +49,18 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 // given HTTP request.
 func extractClientRequest(r *http.Request) (*ClientRequest, error) {
 
+	// Get our bearer token, which is in an HTTP Header.
+	tokenLine := r.Header.Get("Authorization")
+	if tokenLine == "" {
+		return nil, errors.New("request has not 'Authorization' HTTP header")
+	}
+	if !strings.HasPrefix(tokenLine, "Bearer ") {
+		return nil, errors.New("authorization header contains no bearer token")
+	}
+	fields := strings.Split(tokenLine, " ")
+	authToken := fields[1]
+
+	// Now get our request fields, which are in the GET request URL.
 	if err := r.ParseForm(); err != nil {
 		return nil, err
 	}
@@ -71,14 +84,7 @@ func extractClientRequest(r *http.Request) (*ClientRequest, error) {
 		return nil, errors.New("need exactly one 'country_code' key")
 	}
 
-	authToken, ok := r.Form["auth_token"]
-	if !ok {
-		return nil, errors.New("key 'auth_token' not found in request")
-	} else if len(authToken) != 1 {
-		return nil, errors.New("need exactly one 'auth_token' key")
-	}
-
-	return &ClientRequest{id[0], reqType[0], countryCode[0], authToken[0]}, nil
+	return &ClientRequest{id[0], reqType[0], countryCode[0], authToken}, nil
 }
 
 // BridgesHandler deals with clients (e.g., an OONI probe) requesting a bridge
