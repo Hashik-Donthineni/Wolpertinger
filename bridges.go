@@ -126,6 +126,45 @@ func (b *Bridge) GetID() string {
 	return Hmac([]byte(threeTuple))
 }
 
+// loadBridgesFromSql loads and returns from BridgeDB's SQLite database.
+func loadBridgesFromSql() (*Bridges, error) {
+
+	db, err := sql.Open("sqlite3", config.SqliteFile)
+	if err != nil {
+		log.Printf("Failed to open SQLite database: %s", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	sql, err := LoadDatabase(db)
+	if err != nil {
+		log.Printf("Failed to read bridges from SQLite database: %s", err)
+		return nil, err
+	}
+
+	return sql, nil
+}
+
+// loadBridgesFromExtrainfo loads and returns bridges from Serge's extrainfo
+// files.
+func loadBridgesFromExtrainfo() (*Bridges, error) {
+
+	file, err := os.Open(config.ExtrainfoFile)
+	if err != nil {
+		log.Printf("Failed to open extrainfo file: %s", err)
+		return nil, err
+	}
+	defer file.Close()
+
+	extra, err := ParseExtrainfoDoc(file)
+	if err != nil {
+		log.Printf("Failed to read bridges from extrainfo file: %s", err)
+		return nil, err
+	}
+
+	return extra, nil
+}
+
 func (bs *Bridges) ReloadBridges(done chan bool) {
 
 	ticker := time.NewTicker(BridgeReloadInterval)
@@ -133,39 +172,27 @@ func (bs *Bridges) ReloadBridges(done chan bool) {
 
 	sentDone := false
 	for ; true; <-ticker.C {
-		db, err := sql.Open("sqlite3", config.SqliteFile)
+
+		sqlBridges, err := loadBridgesFromSql()
 		if err != nil {
-			log.Printf("Failed to open SQLite database: %s", err)
-			continue
-		}
-		defer db.Close()
-		sql, err := LoadDatabase(db)
-		if err != nil {
-			log.Printf("Failed to read bridges from SQLite database: %s", err)
 			continue
 		}
 
-		file, err := os.Open(config.ExtrainfoFile)
+		extrainfoBridges, err := loadBridgesFromExtrainfo()
 		if err != nil {
-			log.Printf("Failed to open extrainfo file: %s", err)
-			continue
-		}
-		defer file.Close()
-		extra, err := ParseExtrainfoDoc(file)
-		if err != nil {
-			log.Printf("Failed to read bridges from extrainfo file: %s", err)
 			continue
 		}
 
-		for f, b1 := range sql.Bridges {
-			// Do we have any transports for this bridge?
-			if b2, ok := extra.Bridges[f]; ok {
+		// Add transports from our extrainfo data to our bridges from the
+		// SQLite data.
+		for f, b1 := range sqlBridges.Bridges {
+			if b2, ok := extrainfoBridges.Bridges[f]; ok {
 				b1.Transports = b2.Transports
 			}
 		}
 
-		log.Printf("Successfully loaded %d bridges.", len(sql.Bridges))
-		bs.Update(sql)
+		log.Printf("Successfully loaded %d bridges.", len(sqlBridges.Bridges))
+		bs.Update(sqlBridges)
 
 		// Once, after our very first run, we signal to the caller that we're
 		// done.  The caller can the proceed to start the REST API.
