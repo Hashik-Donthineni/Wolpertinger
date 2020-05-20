@@ -117,6 +117,76 @@ Here is an example of a JSON response, consisting of two bridges:
         }
       }
 
+### Posting measurement results (optional)
+
+This section explains how clients can post their measurement results.  Note
+that not all censorship measurement clients may want to post measurement
+results.  For example, OONI doesn't actively post its measurement results to
+wolpertinger; instead, wolpertinger obtains these results itself by fetching
+them from OONI's S3 bucket.
+
+#### Input
+
+To post a measurement, send an HTTP POST request to
+https://bridges.torproject.org/wolpertinger/measurements.  The endpoint expects
+the following JSON:
+
+      {
+        "id": "ID",
+        "type": "TYPE",
+        "country_code": "COUNTRY_CODE",
+        "measurements": {
+          "BRIDGE_ID": {
+            "reachable": REACHABLE,
+            "error": "ERROR"
+          }
+          ...
+        }
+      }
+
+* `ID` is a string that uniquely identifies the client (e.g., "1234").  If the
+  requesting client has no unique ID, use an empty string instead.
+
+* `TYPE` is a string that identifies the type of client that's asking for
+  bridges to probe (e.g., "ooni").  Please talk to us if you intend to use
+  wolpertinger, and we will assign you a type string.
+
+* `COUNTRY_CODE` is a string that contains a ISO 3166-1 alpha-2 country code of
+  the client sending the request (e.g., "be" for Belgium).
+
+* The "measurements" element maps `BRIDGE_ID` strings to dictionaries that
+  contain the actual measurements: `REACHABLE` is a boolean that specifies if
+  the client could bootstrap over the given bridge (e.g., true) and the
+  optional `ERROR` contains a description of the error that the client
+  encountered (e.g., "connection timed out").
+
+Again, clients authenticate themselves via a bearer token, by setting the HTTP
+header `Authorization` to `Bearer TOKEN` where `TOKEN` is a Base64-encoded
+32-byte authentication token.
+
+Here is an example of a JSON request containing two measurement results:
+
+      {
+        "id": "1234",
+        "type": "bridgestrap",
+        "country_code": "ru",
+        "measurements": {
+          "b8ac3f413663f3ed3a404a5db8b1445c8c1b37f85849879feb3b1b03ce8cb6d8": {
+           "reachable": true
+          },
+          "e26e08e6391a18a02387327798bb7c7d3d7aede04517408b082cec6de9dc40c1": {
+           "reachable": false,
+           "error": "connection reset by peer"
+          }
+        }
+      }
+
+#### Output
+
+If wolpertinger received a correctly-formatted request, it responds with an
+HTTP 200 code.  If anything went wrong, it responds with an appropriate HTTP
+error code.
+
 ## Configuration
 
 You must point wolpertinger to its configuration file using the `-config`

@@ -13,17 +13,35 @@ const (
 	ProbeTypeOONI = "ooni"
 )
 
-// ClientRequest represents a request to probe a bridge, e.g., an OONI probe
-// asking to get a bridge to test.
+// ClientRequest represents information about a requesting client.
 type ClientRequest struct {
 	Id        string `json:"id"`
 	ProbeType string `json:"type"`
 	Location  string `json:"country_code"`
 }
 
+// BridgeRequest represents a request for bridges to test.
+type BridgeRequest struct {
+	ClientRequest
+}
+
+// MeasurementRequest represents a request to post measurement results.
+type MeasurementRequest struct {
+	ClientRequest
+	Measurements map[string]BridgeMeasurement `json:"measurements"`
+}
+
+type BridgeMeasurement struct {
+	Reachable bool   `json:"reachable"`
+	Error     string `json:"error,omitempty"`
+}
+
 // ServerResponse is the response to a ClientRequest.  It maps a bridge's ID to
 // a Bridge struct.
-type ServerResponse map[string]*Bridge
+type ServerResponse map[string]SomeKindOfBridge
+
+type SomeKindOfBridge interface {
+}
 
 // authenticateRequest attempts to authenticate the given HTTP request.  If
 // this fails, it returns an error and an HTTP status code that should be
@@ -57,9 +75,9 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Beware the Wolpertinger.")
 }
 
-// extractClientRequest attempts to extract a ClientRequest object from the
+// extractBridgeRequest attempts to extract a BridgeRequest object from the
 // given HTTP request.
-func extractClientRequest(r *http.Request) (*ClientRequest, error) {
+func extractBridgeRequest(r *http.Request) (*BridgeRequest, error) {
 
 	// Now get our request fields, which are in the GET request URL.
 	if err := r.ParseForm(); err != nil {
@@ -85,7 +103,7 @@ func extractClientRequest(r *http.Request) (*ClientRequest, error) {
 		return nil, errors.New("need exactly one 'country_code' key")
 	}
 
-	return &ClientRequest{id[0], reqType[0], countryCode[0]}, nil
+	return &BridgeRequest{ClientRequest: ClientRequest{id[0], reqType[0], countryCode[0]}}, nil
 }
 
 // BridgesHandler deals with clients (e.g., an OONI probe) requesting a bridge
@@ -97,7 +115,7 @@ func BridgesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := extractClientRequest(r)
+	req, err := extractBridgeRequest(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -122,4 +140,24 @@ func BridgesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprintln(w, string(json))
+}
+
+// MeasurementsHandler deals with clients (e.g., bridgestrap) posting
+// measurement results.
+func MeasurementsHandler(w http.ResponseWriter, r *http.Request) {
+
+	if err, statusCode := authenticateRequest(r); err != nil {
+		http.Error(w, err.Error(), statusCode)
+		return
+	}
+
+	var m MeasurementRequest
+	err := json.NewDecoder(r.Body).Decode(&m)
+	if err != nil {
+		log.Println("Received invalid JSON measurement.")
+		http.Error(w, "invalid json measurement", http.StatusBadRequest)
+		return
+	}
+
+	fmt.Fprintln(w, "")
 }

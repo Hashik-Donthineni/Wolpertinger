@@ -6,30 +6,30 @@ import (
 	"testing"
 )
 
-func TestExtractClientRequest(t *testing.T) {
+func TestExtractBridgeRequest(t *testing.T) {
 
 	var baseUrl = "https://bridges.torproject.org/wolpertinger/bridges"
 
 	req, _ := http.NewRequest("GET", baseUrl, nil)
-	_, err := extractClientRequest(req)
+	_, err := extractBridgeRequest(req)
 	if err == nil {
 		t.Error("accepted request with no arguments")
 	}
 
 	req, _ = http.NewRequest("GET", fmt.Sprintf("%s?id=1234&type=foo", baseUrl), nil)
-	_, err = extractClientRequest(req)
+	_, err = extractBridgeRequest(req)
 	if err == nil {
 		t.Error("accepted request with missing arguments")
 	}
 
 	req, _ = http.NewRequest("GET", fmt.Sprintf("%s?id=1234&type=foo&type=bar", baseUrl), nil)
-	_, err = extractClientRequest(req)
+	_, err = extractBridgeRequest(req)
 	if err == nil {
 		t.Error("accepted request with duplicate argument")
 	}
 
 	req, _ = http.NewRequest("GET", fmt.Sprintf("%s?id=1234&type=foo&country_code=ru", baseUrl), nil)
-	ret, err := extractClientRequest(req)
+	ret, err := extractBridgeRequest(req)
 	if err != nil {
 		t.Errorf("failed to accept valid arguments: %s", err.Error())
 	}
@@ -44,7 +44,7 @@ func TestExtractClientRequest(t *testing.T) {
 	}
 
 	req, _ = http.NewRequest("GET", fmt.Sprintf("%s?id=&type=foo&country_code=ru", baseUrl), nil)
-	_, err = extractClientRequest(req)
+	_, err = extractBridgeRequest(req)
 	if err != nil {
 		t.Errorf("failed to accept empty id argument: %s", err.Error())
 	}

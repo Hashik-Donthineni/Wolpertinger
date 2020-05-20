@@ -107,6 +107,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/bridges", http.HandlerFunc(BridgesHandler))
+	mux.Handle("/measurements", http.HandlerFunc(MeasurementsHandler))
 	mux.Handle("/", http.HandlerFunc(IndexHandler))
 
 	log.Printf("Starting service on %s.", addr)
