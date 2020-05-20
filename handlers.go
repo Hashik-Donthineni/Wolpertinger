@@ -19,22 +19,34 @@ type ClientRequest struct {
 	Id        string `json:"id"`
 	ProbeType string `json:"type"`
 	Location  string `json:"country_code"`
-	AuthToken string `json:"auth_token"`
 }
 
 // ServerResponse is the response to a ClientRequest.  It maps a bridge's ID to
 // a Bridge struct.
 type ServerResponse map[string]*Bridge
 
-// isRequestAuthenticated returns 'true' if we have the authentication token in
-// the client request on record.
-func isRequestAuthenticated(req *ClientRequest) bool {
+// authenticateRequest attempts to authenticate the given HTTP request.  If
+// this fails, it returns an error and an HTTP status code that should be
+// returned to the client.
+func authenticateRequest(r *http.Request) (error, int) {
+
+	// First, we get the bearer token from the 'Authorization' HTTP header.
+	tokenLine := r.Header.Get("Authorization")
+	if tokenLine == "" {
+		return errors.New("request has not 'Authorization' HTTP header"), http.StatusBadRequest
+	}
+	if !strings.HasPrefix(tokenLine, "Bearer ") {
+		return errors.New("authorization header contains no bearer token"), http.StatusBadRequest
+	}
+	fields := strings.Split(tokenLine, " ")
+	token := fields[1]
+
 	for _, t := range config.ApiTokens {
-		if req.AuthToken == t.Token {
-			return true
+		if token == t.Token {
+			return nil, 0
 		}
 	}
-	return false
+	return errors.New("invalid authentication token"), http.StatusUnauthorized
 }
 
 // IndexHandler handles requests for the service's index page.  We respond with
@@ -48,17 +60,6 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 // extractClientRequest attempts to extract a ClientRequest object from the
 // given HTTP request.
 func extractClientRequest(r *http.Request) (*ClientRequest, error) {
-
-	// Get our bearer token, which is in an HTTP Header.
-	tokenLine := r.Header.Get("Authorization")
-	if tokenLine == "" {
-		return nil, errors.New("request has not 'Authorization' HTTP header")
-	}
-	if !strings.HasPrefix(tokenLine, "Bearer ") {
-		return nil, errors.New("authorization header contains no bearer token")
-	}
-	fields := strings.Split(tokenLine, " ")
-	authToken := fields[1]
 
 	// Now get our request fields, which are in the GET request URL.
 	if err := r.ParseForm(); err != nil {
@@ -84,22 +85,21 @@ func extractClientRequest(r *http.Request) (*ClientRequest, error) {
 		return nil, errors.New("need exactly one 'country_code' key")
 	}
 
-	return &ClientRequest{id[0], reqType[0], countryCode[0], authToken}, nil
+	return &ClientRequest{id[0], reqType[0], countryCode[0]}, nil
 }
 
 // BridgesHandler deals with clients (e.g., an OONI probe) requesting a bridge
 // to probe.
 func BridgesHandler(w http.ResponseWriter, r *http.Request) {
 
-	req, err := extractClientRequest(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err, statusCode := authenticateRequest(r); err != nil {
+		http.Error(w, err.Error(), statusCode)
 		return
 	}
 
-	if !isRequestAuthenticated(req) {
-		log.Printf("Received request with invalid authentication token.")
-		http.Error(w, "invalid authentication token", http.StatusUnauthorized)
+	req, err := extractClientRequest(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
