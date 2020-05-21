@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	BridgeTypeVanilla = "vanilla"
-	BridgeTypeObfs4   = "obfs4"
+	BridgeTypeVanilla      = "vanilla"
+	BridgeTypeObfs4        = "obfs4"
+	BridgeTypeScrambleSuit = "scramblesuit"
 
 	ProtoTypeTCP = "tcp"
 	ProtoTypeUDP = "udp"

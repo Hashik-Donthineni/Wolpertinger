@@ -36,12 +36,11 @@ type BridgeMeasurement struct {
 	Error     string `json:"error,omitempty"`
 }
 
-// ServerResponse is the response to a ClientRequest.  It maps a bridge's ID to
+// BridgeResponse is the response to a BridgeRequest.  It maps a bridge's ID to
 // a Bridge struct.
-type ServerResponse map[string]SomeKindOfBridge
+type BridgeResponse map[string]BridgeOrTransport
 
-type SomeKindOfBridge interface {
-}
+type BridgeOrTransport interface{}
 
 // authenticateRequest attempts to authenticate the given HTTP request.  If
 // this fails, it returns an error and an HTTP status code that should be
@@ -121,16 +120,11 @@ func BridgesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bridges, err := GetBridges(req)
+	resp, err := GetBridges(req)
 	if err != nil {
 		log.Printf("Error getting bridges: %s", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
-
-	resp := ServerResponse{}
-	for _, bridge := range bridges.Bridges {
-		resp[bridge.GetID()] = bridge
 	}
 
 	json, err := json.Marshal(resp)

@@ -55,3 +55,10 @@ func (t *Transport) GetID() string {
 	threeTuple := fmt.Sprintf("%s-%d-%s", t.Address.String(), t.Port, t.Protocol)
 	return Hmac([]byte(threeTuple))
 }
+
+// IsProbingResistant returns `true` if the given transport is resistant to
+// active probing attacks.  See the following ticket for context on why this
+// matters: <https://bugs.torproject.org/28655>.
+func (t *Transport) IsProbingResistant() bool {
+	return t.Type == BridgeTypeObfs4 || t.Type == BridgeTypeScrambleSuit
+}
