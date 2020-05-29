@@ -33,6 +33,14 @@ type ApiToken struct {
 // loadConfigFile loads our JSON-encoded configuration file from disk.
 func loadConfigFile(filename string) error {
 
+	info, err := os.Stat(filename)
+	if err != nil {
+		return err
+	}
+	if info.Mode() != 0600 {
+		return fmt.Errorf("file %s contains secrets and therefore must have 0600 permissions", filename)
+	}
+
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
