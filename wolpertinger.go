@@ -113,9 +113,8 @@ func main() {
 	go bridges.ReloadBridges(done)
 	<-done
 
-	// Periodically fetch new OONI measurements.
-	// go ProcessOoniOnline()
-	ProcessOoniHistorical("2020-05-01", "2020-05-10")
+	// Periodically fetch new OONI measurement results.
+	go ProcessOoniOnline()
 
 	mux := http.NewServeMux()
 	mux.Handle("/bridges", http.HandlerFunc(BridgesHandler))

@@ -70,3 +70,10 @@ func LoadDatabase(db *sql.DB) (*Bridges, error) {
 
 	return bridges, nil
 }
+
+func InsertBlockedBridge(db *sql.DB) error {
+
+	// TODO: Take as input some sort of bridge object and write it to the given
+	// SQLite database.
+	return nil
+}

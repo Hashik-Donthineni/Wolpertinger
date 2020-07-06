@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/mholt/archiver"
 )
 
@@ -65,16 +66,7 @@ type TorTarget struct {
 // <https://github.com/ooni/spec/blob/master/data-formats/df-007-errors.md>
 type Failure map[string]string
 
-type MeasurementFile struct {
-	TextCrc32 int    `json:"text_crc32"`
-	TextSha1  string `json:"text_sha1"`
-	TextSize  int    `json:"text_size"`
-	TextName  string `json:"textname"`
-}
-
 type OoniBucket struct {
-	//Can []MeasurementFile `json:"canned,omitempty"`
-
 	FileSize  int    `json:"file_size"`
 	TextSize  int    `json:"text_size"`
 	FileSha1  string `json:"file_sha1"`
@@ -130,18 +122,27 @@ func ProcessOoniOnline() {
 	}
 }
 
+// ProcessOoniDate fetches OONI's bridge measurement results for the given date
+// and incorporates them into our database.
 func ProcessOoniDate(date string) error {
 	buckets, err := fetchOoniBuckets(date)
 	if err != nil {
 		return err
 	}
 
+	db, err := sql.Open("sqlite3", config.SqliteFile)
+	if err != nil {
+		log.Printf("Failed to open SQLite database: %s", err)
+		return nil, err
+	}
+	defer db.Close()
+
 	for _, bucket := range buckets {
 		m, err := fetchOoniMeasurement(bucket.FileName)
 		if err != nil {
 			return err
 		}
-		if err = augmentSqliteDb(m); err != nil {
+		if err = augmentSqliteDb(m, db); err != nil {
 			return err
 		}
 	}
@@ -149,34 +150,33 @@ func ProcessOoniDate(date string) error {
 	return nil
 }
 
-func augmentSqliteDb(m *OoniMeasurement) error {
-
-	log.Printf("Attempting to write OONI measurement to SQLite database.")
-	// TODO: Add tor measurement data to our sqlite database
+// augmentSqliteDb adds a single OONI measurement to our SQLite database.
+func augmentSqliteDb(m *OoniMeasurement, db *sql.DB) error {
 
 	if m.TestName != TorTestName {
 		return fmt.Errorf("expected test_name to be %s but got %s", TorTestName, m.TestName)
 	}
+	log.Printf("Attempting to write OONI measurement to SQLite database.")
 
 	for id, target := range m.TestKeys.Targets {
-		log.Printf("id=%s, target=%s\n", id, target)
-		// TODO: skip bridges that we don't need to add to OONI.  The target's
-		// ID should tell us if we want it.  We aren't interested in targets
-		// that don't have an address (private bridges don't have one).
-		bridges := make(map[string]*TorTarget)
-		if target, ok := bridges[id]; ok {
-			// TODO: We're dealing with a bridge that we know.
-			log.Println(target)
-		}
+		if bridge, ok := bridges[id]; ok {
+			// We're dealing with a bridge that we know.
+			log.Println(bridge)
+			// TODO: Add information to our SQL table.
+			InsertBlockedBridge(db)
 
-		// query := fmt.Sprintf("INSERT INTO BlockedBridges ",
-		// 	"(bridge_type, address, port, blocking_country, blocking_asn, measured_by, last_measured)",
-		// 	"VALUES (%s, %s, %s, %s, %s, %s, %s")
+			// SQL schema of our BlockedBridges table:
+			// https://gitlab.torproject.org/tpo/anti-censorship/bridgedb/-/blob/develop/bridgedb/Storage.py#L71
+		} else {
+			log.Printf("Could not find bridge ID in map: %s", id)
+		}
 	}
 
 	return nil
 }
 
+// fetchOoniMeasurement fetches the given OONI Tor measurement and returns its
+// JSON content as a OoniMeasurement struct.
 func fetchOoniMeasurement(urlSuffix string) (*OoniMeasurement, error) {
 
 	m := &OoniMeasurement{}
@@ -191,7 +191,7 @@ func fetchOoniMeasurement(urlSuffix string) (*OoniMeasurement, error) {
 	}
 	defer resp.Body.Close()
 
-	// Write content to a temporary file.
+	// Write tarball to a temporary file.
 	tmpfile, err := ioutil.TempFile("", "ooni-tor-measurement-*.tar.lz4")
 	if err != nil {
 		return nil, err
@@ -205,10 +205,9 @@ func fetchOoniMeasurement(urlSuffix string) (*OoniMeasurement, error) {
 	if _, err := tmpfile.Write(body); err != nil {
 		return nil, err
 	}
-	log.Printf("wrote content to %s\n", tmpfile.Name())
 
+	// archiver's Walk function transparently decompresses files.
 	err = archiver.Walk(tmpfile.Name(), func(f archiver.File) error {
-		log.Println(f.Name())
 		content, err := ioutil.ReadAll(f)
 		if err != nil {
 			return err
@@ -216,7 +215,6 @@ func fetchOoniMeasurement(urlSuffix string) (*OoniMeasurement, error) {
 		if err = json.Unmarshal(content, &m); err != nil {
 			return err
 		}
-		//fmt.Println(string(content))
 		return nil
 	})
 	if err != nil {
