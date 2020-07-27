@@ -32,7 +32,7 @@ func TestFetchOoniMeasurement(t *testing.T) {
 		t.Error("failed to fetch valid measurement")
 	}
 
-	_, err := fetchOoniMeasurement("2020-05-01/tor.1.tar.lz4")
+	_, err = fetchOoniMeasurement("2020-05-01/tor.1.tar.lz4")
 	if err == nil {
 		t.Error("somehow wound up with data for non-existing tarball")
 	}
