@@ -61,7 +61,7 @@ func (old *Bridges) Update(new *Bridges) {
 // bridge's fingerprint and its unique ID) to the same value.
 func (bs *Bridges) Add(b *Bridge) {
 	bs.Bridges[b.Fingerprint] = b
-	bs.Bridges[b.GetID] = b
+	bs.Bridges[b.GetID()] = b
 }
 
 // NewBridges allocates and returns a new Bridges object.
