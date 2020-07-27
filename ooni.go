@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -133,7 +134,7 @@ func ProcessOoniDate(date string) error {
 	db, err := sql.Open("sqlite3", config.SqliteFile)
 	if err != nil {
 		log.Printf("Failed to open SQLite database: %s", err)
-		return nil, err
+		return err
 	}
 	defer db.Close()
 
@@ -158,8 +159,8 @@ func augmentSqliteDb(m *OoniMeasurement, db *sql.DB) error {
 	}
 	log.Printf("Attempting to write OONI measurement to SQLite database.")
 
-	for id, target := range m.TestKeys.Targets {
-		if bridge, ok := bridges[id]; ok {
+	for id, _ := range m.TestKeys.Targets {
+		if bridge, ok := bridges.Bridges[id]; ok {
 			// We're dealing with a bridge that we know.
 			log.Println(bridge)
 			// TODO: Add information to our SQL table.
