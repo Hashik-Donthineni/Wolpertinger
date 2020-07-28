@@ -3,10 +3,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/mattn/go-sqlite3"
+	"log"
 	"net"
 	"strconv"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -71,9 +71,20 @@ func LoadDatabase(db *sql.DB) (*Bridges, error) {
 	return bridges, nil
 }
 
-func InsertBlockedBridge(db *sql.DB) error {
+func InsertBlockedBridge(bridge *Bridge, db *sql.DB) error {
 
-	// TODO: Take as input some sort of bridge object and write it to the given
-	// SQLite database.
+	// TODO: Add support for adding keys: blocking_asn, measured_by, last_measured
+	stmt, err := db.Prepare("INSERT INTO BlockedBridges (hex_key, address, port, blocking_country) VALUES (?, ?, ?, ?)")
+	if err != nil {
+		log.Print("error preparing statement for inserting a blocked bridge")
+		return err
+	}
+	_, err = stmt.Exec(bridge.GetID(), bridge.Address, bridge.Port, bridge.BlockedIn)
+	if err != nil {
+		log.Print("error inserting a bridge into BlockedBridge table")
+		return err
+	}
+
+	defer db.Close()
 	return nil
 }
